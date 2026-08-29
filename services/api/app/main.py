@@ -1,7 +1,9 @@
+import time
+
 from fastapi import FastAPI, HTTPException
 from prometheus_client import Counter, Histogram, generate_latest
 from starlette.responses import Response
-import time
+
 
 app = FastAPI(
     title="OpsMind API",
