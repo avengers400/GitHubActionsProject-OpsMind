@@ -32,6 +32,7 @@ jobs:
             - name: Run ruff test
               working-directory: services/api
               run: |
+                 ruff check . --fix
                  ruff check .
             
             - name: Run tests
