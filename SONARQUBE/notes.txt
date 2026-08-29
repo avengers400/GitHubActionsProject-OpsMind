@@ -1,0 +1,476 @@
+Yes. If you're preparing for a **DevOps/SRE interview with 8–10 years of experience**, SonarQube questions can go well beyond "what is SonarQube?"
+
+I'd prepare these areas.
+
+## 🔥 SonarQube interview questions
+
+### 1. Fundamentals — must know
+
+**Q1. What is SonarQube?**
+
+> Static code analysis platform used to identify bugs, vulnerabilities, code smells, duplication, complexity and maintainability issues.
+
+**Q2. SonarQube vs SonarCloud?**
+
+Know:
+
+```text
+SonarQube → self-hosted
+SonarQube Cloud → SaaS
+```
+
+**Q3. What is Sonar Scanner?**
+
+The scanner performs analysis and sends the results to SonarQube.
+
+```text
+GitHub Actions
+      ↓
+Sonar Scanner
+      ↓
+SonarQube
+```
+
+---
+
+# 2. Quality Gate — ⭐⭐⭐⭐⭐
+
+### Q4. What is a Quality Gate?
+
+A collection of conditions determining whether code meets the organization's quality standards.
+
+Example:
+
+```text
+New Bugs             = 0
+New Vulnerabilities  = 0
+Coverage             >= 80%
+Duplications         < 3%
+```
+
+### Q5. What happens if Quality Gate fails?
+
+```text
+Sonar analysis
+      ↓
+Quality Gate FAIL
+      ↓
+GitHub Action fails
+      ↓
+Deployment blocked
+```
+
+But this depends on how the pipeline is configured.
+
+---
+
+### Q6. Quality Gate vs Quality Profile?
+
+**Quality Profile:**
+
+> Which rules should be applied?
+
+**Quality Gate:**
+
+> Did the project meet the required quality conditions?
+
+Very common interview question.
+
+---
+
+# 3. Metrics — ⭐⭐⭐⭐
+
+Know:
+
+### Bugs
+
+Potential reliability problems.
+
+### Vulnerabilities
+
+Potential security weaknesses.
+
+### Code Smells
+
+Maintainability problems.
+
+### Security Hotspots
+
+Code requiring security review.
+
+### Duplication
+
+Repeated code.
+
+### Coverage
+
+Percentage of code exercised by tests.
+
+---
+
+# 4. New Code — ⭐⭐⭐⭐⭐
+
+### Q7. What is "New Code"?
+
+Code introduced or changed within the configured new-code period/baseline.
+
+This is important because you don't necessarily want:
+
+```text
+10-year-old application
+        ↓
+50,000 existing issues
+        ↓
+Quality Gate
+        ↓
+FAIL forever ❌
+```
+
+Instead:
+
+```text
+Legacy code
+   ↓
+Existing issues tolerated/managed
+
+New PR
+   ↓
+No new critical issues
+Good coverage
+No new vulnerabilities
+   ↓
+PASS
+```
+
+Know the **Clean as You Code** concept.
+
+---
+
+# 5. Exclusions — ⭐⭐⭐⭐⭐
+
+### Q8. How do you exclude files?
+
+```properties
+sonar.exclusions=generated/**,vendor/**
+```
+
+### Q9. How do you exclude files from coverage?
+
+```properties
+sonar.coverage.exclusions=generated/**,migrations/**
+```
+
+### Q10. How do you exclude test files?
+
+Know the difference between:
+
+```properties
+sonar.tests=tests
+```
+
+and test/analysis exclusions.
+
+---
+
+# 6. CI/CD integration — ⭐⭐⭐⭐⭐
+
+### Q11. How did you integrate SonarQube with GitHub Actions?
+
+Expected answer:
+
+```text
+Developer
+   ↓
+GitHub PR
+   ↓
+GitHub Actions
+   ↓
+Build/test
+   ↓
+Sonar Scanner
+   ↓
+SonarQube
+   ↓
+Quality Gate
+   ↓
+Continue/Fail
+```
+
+---
+
+### Q12. Where do you store Sonar credentials?
+
+**Never inside the repository.**
+
+Use:
+
+```text
+GitHub Secrets
+     ↓
+SONAR_TOKEN
+SONAR_HOST_URL
+```
+
+Example:
+
+```yaml
+env:
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+```
+
+---
+
+# 7. Troubleshooting — ⭐⭐⭐⭐⭐
+
+This is where **your 10-year DevOps experience** should show.
+
+### Q13. Sonar scan suddenly fails. What do you check?
+
+I'd answer:
+
+> "First I check whether the scanner itself failed or whether the analysis completed and the Quality Gate failed. Then I check the GitHub Actions logs, Sonar token, Sonar host connectivity, project configuration, scanner version, source/test paths and the SonarQube server logs."
+
+Think:
+
+```text
+Pipeline failure
+      │
+      ├── Authentication?
+      │
+      ├── Network?
+      │
+      ├── Scanner?
+      │
+      ├── Project configuration?
+      │
+      └── Quality Gate?
+```
+
+---
+
+# 8. Coverage — ⭐⭐⭐⭐
+
+### Q14. Does SonarQube execute tests?
+
+**No.**
+
+This is important.
+
+Typically:
+
+```text
+pytest
+   ↓
+Execute tests
+   ↓
+coverage.xml
+   ↓
+SonarQube
+   ↓
+Read coverage
+```
+
+Sonar analyzes the code and consumes test/coverage information.
+
+---
+
+# 9. SonarQube vs other tools
+
+### Q15. SonarQube vs Jenkins?
+
+Completely different.
+
+```text
+Jenkins
+→ CI/CD automation
+
+SonarQube
+→ Code quality/security analysis
+```
+
+### Q16. SonarQube vs Trivy?
+
+```text
+SonarQube
+→ Source code analysis
+
+Trivy
+→ Container/filesystem/dependency/IaC security scanning
+```
+
+### Q17. SonarQube vs Snyk?
+
+They overlap in some security areas, but their focus and capabilities differ. Know what your organization uses rather than claiming they're interchangeable.
+
+### Q18. SonarQube vs Ruff?
+
+```text
+Ruff
+→ Fast Python linting/formatting
+
+SonarQube
+→ Broader centralized code-quality/security analysis
+```
+
+---
+
+# 10. Security questions
+
+### Q19. What is a Security Hotspot?
+
+A piece of code that **may have security implications and requires human review**.
+
+Don't say:
+
+> "Security Hotspot = vulnerability."
+
+That's incorrect.
+
+---
+
+### Q20. Can SonarQube replace Trivy?
+
+**No.**
+
+For our architecture:
+
+```text
+Source code
+    ↓
+SonarQube
+    ↓
+Code quality/security
+```
+
+Then:
+
+```text
+Docker image
+    ↓
+Trivy
+    ↓
+Container vulnerabilities
+```
+
+Both serve different purposes.
+
+---
+
+# 11. Advanced questions you should know
+
+For your experience level, I'd also prepare:
+
+### Q21. What is a Sonar project key?
+
+Unique identifier used by SonarQube to identify the project during analysis.
+
+Example:
+
+```properties
+sonar.projectKey=opsmind-api
+```
+
+### Q22. What is `sonar-project.properties`?
+
+Configuration file containing project analysis settings.
+
+Example:
+
+```properties
+sonar.projectKey=opsmind-api
+sonar.sources=app
+sonar.tests=tests
+sonar.coverage.exclusions=tests/**
+```
+
+---
+
+### Q23. How do you prevent developers from bypassing Sonar?
+
+Use:
+
+```text
+GitHub Branch Protection
+        +
+Required Status Checks
+        +
+Sonar Quality Gate
+```
+
+So:
+
+```text
+PR
+ ↓
+Sonar
+ ↓
+FAIL ❌
+ ↓
+GitHub branch protection
+ ↓
+Merge blocked
+```
+
+This is a **strong real-world answer**.
+
+---
+
+# 12. A scenario question
+
+### "Developer says Sonar is blocking his deployment but the application works. What do you do?"
+
+Don't immediately disable Sonar.
+
+Say:
+
+> "I'd first inspect the Quality Gate and identify which condition failed. If it's a genuine bug, vulnerability or insufficient coverage, I'd ask the developer to address it. If it's a false positive or an accepted exception, I'd review the rule and project policy and make an auditable exception rather than bypassing the entire Quality Gate."
+
+That's exactly the mindset interviewers want.
+
+---
+
+# 🎯 What I would expect you to know
+
+For your target profile:
+
+```text
+SonarQube
+─────────────────────────────
+Basics                 ██████████  10/10
+Quality Gates          ██████████  10/10
+Quality Profiles       ████████░░   8/10
+Metrics                ████████░░   8/10
+Exclusions             ████████░░   8/10
+GitHub Actions         ██████████  10/10
+Troubleshooting        ████████░░   8/10
+Coverage               ███████░░░   7/10
+Security concepts      ███████░░░   7/10
+Server administration  ████░░░░░░   4/10
+Plugin development     ██░░░░░░░░   2/10
+```
+
+You **don't need to memorize every Sonar property**.
+
+The important thing is being able to explain the **end-to-end flow and troubleshoot it**:
+
+```text
+Developer
+    ↓
+GitHub PR
+    ↓
+GitHub Actions
+    ↓
+pytest + coverage
+    ↓
+Sonar Scanner
+    ↓
+SonarQube
+    ↓
+Quality Gate
+    ↓
+GitHub Required Check
+    ↓
+Merge / Block
+```
+
+For our project, **this is exactly what we'll implement next**, so you'll have a real example to discuss rather than only theoretical knowledge.
