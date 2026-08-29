@@ -20,7 +20,7 @@ jobs:
             - name: Set Up Python
               uses: actions/setup-python@v5
               with:
-                pyton-version: "3.12"
+                python-version: "3.12"
                 cache: "pip"
                 cache-dependency-path: services/api/requirements.txt
             
@@ -39,7 +39,7 @@ jobs:
               env:
                 PYTHONPATH: .
               run: |
-                 pytest -v
+                 python -m pytest -v
               
                    
           
