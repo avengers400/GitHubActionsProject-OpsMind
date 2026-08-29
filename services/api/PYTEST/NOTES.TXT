@@ -1,0 +1,380 @@
+Absolutely. For a **DevOps/SRE interview**, you don't need to explain pytest like a Python developer. You should explain **what it is, how it works, how you use it in CI/CD, and how you troubleshoot failures**.
+
+## Pytest — Interview Summary
+
+### 1. What is pytest?
+
+> **Pytest is a Python testing framework used to automate unit and integration testing of Python applications. In DevOps, I primarily use it as a CI quality gate to validate application changes before building and deploying artifacts.**
+
+Example:
+
+```python
+def test_health():
+    response = client.get("/health")
+
+    assert response.status_code == 200
+```
+
+Here we verify that `/health` returns HTTP `200`.
+
+---
+
+## 2. How does pytest discover tests?
+
+By convention, pytest looks for:
+
+```text
+test_*.py
+*_test.py
+```
+
+and functions beginning with:
+
+```python
+test_
+```
+
+Example:
+
+```text
+tests/
+├── test_api.py
+├── test_auth.py
+└── test_database.py
+```
+
+Inside:
+
+```python
+def test_health():
+    ...
+
+def test_login():
+    ...
+```
+
+Pytest automatically discovers these tests.
+
+---
+
+## 3. How do you execute pytest?
+
+Basic:
+
+```bash
+pytest
+```
+
+Verbose:
+
+```bash
+pytest -v
+```
+
+Specific file:
+
+```bash
+pytest tests/test_api.py -v
+```
+
+Specific test:
+
+```bash
+pytest tests/test_api.py::test_health -v
+```
+
+Stop after first failure:
+
+```bash
+pytest -x
+```
+
+---
+
+# 4. What is `assert`?
+
+`assert` validates the expected result.
+
+```python
+assert response.status_code == 200
+```
+
+If:
+
+```text
+Actual   = 200
+Expected = 200
+```
+
+→ PASS
+
+If:
+
+```text
+Actual   = 500
+Expected = 200
+```
+
+→ FAIL.
+
+---
+
+# 5. What are fixtures?
+
+Fixtures provide **reusable setup and test dependencies**.
+
+Example:
+
+```python
+import pytest
+from fastapi.testclient import TestClient
+
+@pytest.fixture
+def client():
+    return TestClient(app)
+```
+
+Then:
+
+```python
+def test_health(client):
+    response = client.get("/health")
+
+    assert response.status_code == 200
+```
+
+Instead of creating the test client in every test, pytest provides it through the fixture.
+
+In a real project, fixtures can prepare:
+
+```text
+Database
+Test client
+Authentication
+Test data
+AWS mock
+Temporary files
+```
+
+---
+
+# 6. What is parametrization?
+
+It allows us to run the same test with multiple inputs.
+
+```python
+@pytest.mark.parametrize(
+    "endpoint",
+    ["/", "/health", "/ready"]
+)
+def test_endpoints(client, endpoint):
+    response = client.get(endpoint)
+
+    assert response.status_code == 200
+```
+
+Instead of writing three separate tests, pytest runs the same test against all three endpoints.
+
+---
+
+# 7. What is mocking?
+
+Mocking allows us to replace external dependencies during testing.
+
+Suppose:
+
+```text
+Application → AWS API
+```
+
+We don't want every test to actually call AWS.
+
+We can mock it:
+
+```python
+from unittest.mock import patch
+
+@patch("app.aws.get_status")
+def test_status(mock_status):
+
+    mock_status.return_value = "running"
+
+    result = get_status()
+
+    assert result == "running"
+```
+
+So:
+
+```text
+Production:
+
+Application → AWS
+
+
+Test:
+
+Application → Mock AWS
+```
+
+This makes tests faster and predictable.
+
+---
+
+# 8. Most important for DevOps — exit codes
+
+This is something you should definitely mention in an interview.
+
+```bash
+pytest -v
+echo $?
+```
+
+Successful tests:
+
+```text
+0
+```
+
+Failed tests:
+
+```text
+1
+```
+
+CI/CD uses this exit code.
+
+```text
+GitHub Actions
+      │
+      ▼
+    pytest
+      │
+ ┌────┴────┐
+ │         │
+ 0         1
+ │         │
+ ▼         ▼
+PASS      FAIL
+ │         │
+ ▼         ▼
+Continue  Stop
+```
+
+---
+
+# 9. Pytest in GitHub Actions
+
+Example:
+
+```yaml
+- name: Setup Python
+  uses: actions/setup-python@v5
+  with:
+    python-version: "3.12"
+
+- name: Install dependencies
+  working-directory: services/api
+  run: |
+    pip install -r requirements.txt
+
+- name: Run tests
+  working-directory: services/api
+  run: |
+    pytest -v
+```
+
+The pipeline becomes:
+
+```text
+Developer
+    ↓
+Pull Request
+    ↓
+GitHub Actions
+    ↓
+Install dependencies
+    ↓
+pytest
+    ↓
+PASS / FAIL
+```
+
+If pytest fails, the job fails and subsequent deployment stages don't execute.
+
+---
+
+# 10. Unit vs integration tests
+
+You should know this distinction.
+
+### Unit test
+
+Tests a small piece of functionality in isolation.
+
+```text
+Function → Test
+```
+
+Example:
+
+```python
+def add(a, b):
+    return a + b
+
+
+def test_add():
+    assert add(2, 3) == 5
+```
+
+### Integration test
+
+Tests multiple components working together.
+
+For example:
+
+```text
+API
+ ↓
+Database
+ ↓
+Response
+```
+
+For our OpsMind project, a test that calls the FastAPI endpoint and verifies the complete request/response flow is closer to an **API/integration-style test** than a pure unit test.
+
+---
+
+# 11. How would you troubleshoot a failed pytest in CI?
+
+This is a **very good interview question**.
+
+I'd answer:
+
+> "First I check the failed test and traceback in the GitHub Actions logs. I reproduce the failure locally using the same Python version and dependency versions. I run the specific failing test with `pytest -v` or target it using the `test_file.py::test_name` syntax. Then I check whether the issue is application code, test data, dependencies, environment variables, external services, or the CI environment."
+
+Example:
+
+```bash
+pytest tests/test_api.py::test_health -v
+```
+
+Then investigate the traceback.
+
+---
+
+# 12. Your interview answer — memorize this
+
+If the interviewer asks:
+
+### **"How do you use pytest in your DevOps pipeline?"**
+
+You can say:
+
+> **"Pytest is the Python testing framework we use to validate application behavior. In our CI pipeline, GitHub Actions installs the required dependencies and executes the pytest suite. We use assertions for expected behavior, fixtures for reusable test setup, parametrization for testing multiple inputs, and mocks when we need to isolate external dependencies. Pytest returns an exit code, so a zero exit code allows the pipeline to continue while a non-zero exit code fails the CI job. We make the test stage a required quality gate before Docker image creation and deployment."**
+
+Then give your OpsMind example:
+
+> **"For example, our FastAPI application has a `/health` endpoint. We use `TestClient` to call it and assert that it returns HTTP 200 and the expected JSON response. If that test fails, GitHub Actions stops the pipeline and we don't proceed with the deployment."**
+
+That's a **strong DevOps-level pytest answer**.

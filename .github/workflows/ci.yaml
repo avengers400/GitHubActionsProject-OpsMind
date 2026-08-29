@@ -1,0 +1,39 @@
+name: OpsMind CI
+
+on:
+    pull_request:
+        branches:
+            - main
+    
+    push:
+        branches:
+            - main
+
+jobs:
+    test:
+        name: Test Application
+        runs-on: ubuntu-latest
+        steps:
+            - name: CheckOut Code
+              uses: actions/checkour@v4
+            
+            - name: Set Up Python
+              uses: actions/setup-python@v5
+              with:
+                pyton-version: "3.12"
+                cache: "pip"
+                cache-dependency-path: services/api/requirements.txt
+            
+            - name: Install Dependencies
+              working-directory: services/api
+              run: |
+                python -m pip install --upgrade pip
+                pip install -r requirements.txt
+            
+            - name: Run tests
+              working-directory: services/api
+              run: |
+                 pytest -v
+              
+                   
+          
